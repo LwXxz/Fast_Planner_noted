@@ -1,0 +1,4 @@
+<launch>
+  <!-- args将rviz文件传递给rvizvisualisation节点, rviz节点所属的包pkg -->
+  <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find plan_manage)/config/traj.rviz" /> 
+</launch>
