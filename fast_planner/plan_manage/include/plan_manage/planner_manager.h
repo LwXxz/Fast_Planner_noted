@@ -103,7 +103,7 @@ private:
   // SECTION developing
 
 public:
-  typedef unique_ptr<FastPlannerManager> Ptr;
+  typedef unique_ptr<FastPlannerManager> Ptr; // Ptr作为指向FastPlannerManager的unique_ptr的别名
 
   // !SECTION
 };

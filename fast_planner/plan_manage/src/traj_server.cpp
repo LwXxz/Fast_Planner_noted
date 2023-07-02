@@ -55,6 +55,7 @@ double time_forward_;
 
 vector<Eigen::Vector3d> traj_cmd_, traj_real_;
 
+// 可视化
 void displayTrajWithColor(vector<Eigen::Vector3d> path, double resolution, Eigen::Vector4d color,
                           int id) {
   visualization_msgs::Marker mk;
@@ -92,6 +93,7 @@ void displayTrajWithColor(vector<Eigen::Vector3d> path, double resolution, Eigen
   ros::Duration(0.001).sleep();
 }
 
+// 可视化
 void drawCmd(const Eigen::Vector3d& pos, const Eigen::Vector3d& vec, const int& id,
              const Eigen::Vector4d& color) {
   visualization_msgs::Marker mk_state;
@@ -125,6 +127,7 @@ void drawCmd(const Eigen::Vector3d& pos, const Eigen::Vector3d& vec, const int& 
   cmd_vis_pub.publish(mk_state);
 }
 
+// 传入数据时使用const类型的数据
 void bsplineCallback(plan_manage::BsplineConstPtr msg) {
   // parse pos traj
 
@@ -294,7 +297,7 @@ int main(int argc, char** argv) {
   pos_cmd_pub = node.advertise<quadrotor_msgs::PositionCommand>("/position_cmd", 50);
   traj_pub = node.advertise<visualization_msgs::Marker>("planning/travel_traj", 10);
 
-  ros::Timer cmd_timer = node.createTimer(ros::Duration(0.01), cmdCallback);
+  ros::Timer cmd_timer = node.createTimer(ros::Duration(0.01), cmdCallback);  // 定时器回调函数用法。每0.01秒触发一次cmdCallback
   ros::Timer vis_timer = node.createTimer(ros::Duration(0.25), visCallback);
 
   /* control parameter */

@@ -52,7 +52,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt, bool dynamic
   cur_node->f_score = lambda_heu_ * getEuclHeu(cur_node->position, end_pt);
   cur_node->node_state = IN_OPEN_SET;
 
-  open_set_.push(cur_node);
+  open_set_.push(cur_node); // 放入优先队列
   use_node_num_ += 1;
 
   if (dynamic) {
@@ -79,7 +79,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt, bool dynamic
     // endl;
 
     /* ---------- determine termination ---------- */
-
+    // 判断是否在终点附近或是否到达终点
     bool reach_end = abs(cur_node->index(0) - end_index(0)) <= 1 &&
         abs(cur_node->index(1) - end_index(1)) <= 1 && abs(cur_node->index(2) - end_index(2)) <= 1;
 
@@ -88,7 +88,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt, bool dynamic
       // cout << "use node num: " << use_node_num_ << endl;
       // cout << "iter num: " << iter_num_ << endl;
       terminate_node = cur_node;
-      retrievePath(terminate_node);
+      retrievePath(terminate_node); // 回溯路径，根据父节点
       has_path_ = true;
 
       return REACH_END;
@@ -108,7 +108,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt, bool dynamic
     vector<Eigen::Vector3d> inputs;
     Eigen::Vector3d d_pos;
 
-    /* ---------- expansion loop ---------- */
+    /* ---------- expansion loop 27种运动方式 ---------- */
     for (double dx = -resolution_; dx <= resolution_ + 1e-3; dx += resolution_)
       for (double dy = -resolution_; dy <= resolution_ + 1e-3; dy += resolution_)
         for (double dz = -resolution_; dz <= resolution_ + 1e-3; dz += resolution_) {
@@ -116,7 +116,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt, bool dynamic
 
           if (d_pos.norm() < 1e-3) continue;
 
-          pro_pos = cur_pos + d_pos;
+          pro_pos = cur_pos + d_pos;  // 下一个可能的位置 = 当前位置 + 移动位置
 
           /* ---------- check if in feasible space ---------- */
           /* inside map range */
@@ -127,7 +127,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt, bool dynamic
             continue;
           }
 
-          /* not in close set */
+          /* not in close set 直接在HashTable中找到该节点 */
           Eigen::Vector3i pro_id = posToIndex(pro_pos);
           int pro_t_id = timeToIndex(pro_t);
 
@@ -151,9 +151,9 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt, bool dynamic
 
           /* ---------- compute cost ---------- */
           double time_to_goal, tmp_g_score, tmp_f_score;
-          tmp_g_score = d_pos.squaredNorm() + cur_node->g_score;
-          tmp_f_score = tmp_g_score + lambda_heu_ * getEuclHeu(pro_pos, end_pt);
-
+          tmp_g_score = d_pos.squaredNorm() + cur_node->g_score;  // pro_node的cost so far
+          tmp_f_score = tmp_g_score + lambda_heu_ * getEuclHeu(pro_pos, end_pt);  // pro_node的总f_socre
+          // 若该节点未设置，则设置pro_node各个参数，并push进入open_set中
           if (pro_node == NULL) {
             pro_node = path_node_pool_[use_node_num_];
             pro_node->index = pro_id;
@@ -178,7 +178,9 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt, bool dynamic
               cout << "run out of memory." << endl;
               return NO_PATH;
             }
+          // pro_node已经在open_set中了
           } else if (pro_node->node_state == IN_OPEN_SET) {
+            // 判断cost so far的大小，是否需要更新
             if (tmp_g_score < pro_node->g_score) {
               // pro_node->index = pro_id;
               pro_node->position = pro_pos;
@@ -202,17 +204,19 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt, bool dynamic
   return NO_PATH;
 }
 
+// 设置参数
 void Astar::setParam(ros::NodeHandle& nh) {
   nh.param("astar/resolution_astar", resolution_, -1.0);
   nh.param("astar/time_resolution", time_resolution_, -1.0);
   nh.param("astar/lambda_heu", lambda_heu_, -1.0);
   nh.param("astar/margin", margin_, -1.0);
-  nh.param("astar/allocate_num", allocate_num_, -1);
+  nh.param("astar/allocate_num", allocate_num_, -1); // 分配空间
   tie_breaker_ = 1.0 + 1.0 / 10000;
 
   cout << "margin:" << margin_ << endl;
 }
 
+// 回溯路径
 void Astar::retrievePath(NodePtr end_node) {
   NodePtr cur_node = end_node;
   path_nodes_.push_back(cur_node);
@@ -233,6 +237,8 @@ std::vector<Eigen::Vector3d> Astar::getPath() {
   return path;
 }
 
+// 以下三个Heuristic function
+// 对角距离
 double Astar::getDiagHeu(Eigen::Vector3d x1, Eigen::Vector3d x2) {
   double dx = fabs(x1(0) - x2(0));
   double dy = fabs(x1(1) - x2(1));
@@ -256,6 +262,7 @@ double Astar::getDiagHeu(Eigen::Vector3d x1, Eigen::Vector3d x2) {
   return tie_breaker_ * h;
 }
 
+// 曼哈顿距离
 double Astar::getManhHeu(Eigen::Vector3d x1, Eigen::Vector3d x2) {
   double dx = fabs(x1(0) - x2(0));
   double dy = fabs(x1(1) - x2(1));
@@ -264,6 +271,7 @@ double Astar::getManhHeu(Eigen::Vector3d x1, Eigen::Vector3d x2) {
   return tie_breaker_ * (dx + dy + dz);
 }
 
+// 欧式距离
 double Astar::getEuclHeu(Eigen::Vector3d x1, Eigen::Vector3d x2) {
   return tie_breaker_ * (x2 - x1).norm();
 }
@@ -291,6 +299,7 @@ void Astar::setEnvironment(const EDTEnvironment::Ptr& env) {
   this->edt_environment_ = env;
 }
 
+// 重回初始化
 void Astar::reset() {
   expanded_nodes_.clear();
   path_nodes_.clear();

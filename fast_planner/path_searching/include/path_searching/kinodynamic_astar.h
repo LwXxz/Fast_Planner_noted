@@ -46,6 +46,8 @@ class PathNode {
 };
 typedef PathNode* PathNodePtr;  // 路径节点的指针
 
+// NodeComparator为一个仿函数，即类中实现了operator(),这个类有了函数的行为
+// 初始化open_set时，即为以f_score排序的小根堆
 class NodeComparator {
  public:
   bool operator()(PathNodePtr node1, PathNodePtr node2) {
@@ -53,14 +55,15 @@ class NodeComparator {
   }
 };
 
+// matrix_hash为仿函数，实现expanded_nodes_的hash函数，返回唯一hash value
 template <typename T>
 struct matrix_hash : std::unary_function<T, size_t> {
   std::size_t operator()(T const& matrix) const {
     size_t seed = 0;
     for (size_t i = 0; i < matrix.size(); ++i) {
-      auto elem = *(matrix.data() + i);
+      auto elem = *(matrix.data() + i);  // 遍历矩阵/向量中每一个值，行优先
       seed ^= std::hash<typename T::Scalar>()(elem) + 0x9e3779b9 + (seed << 6) +
-              (seed >> 2);
+              (seed >> 2); // ^=: 异或运算
     }
     return seed;
   }
@@ -69,6 +72,7 @@ struct matrix_hash : std::unary_function<T, size_t> {
 class NodeHashTable {
  private:
   /* data */
+  // unordered_map根据自定义的hash函数来进行存储，一个key对应唯一的hash value
   std::unordered_map<Eigen::Vector3i, PathNodePtr, matrix_hash<Eigen::Vector3i>>
       data_3d_;
   std::unordered_map<Eigen::Vector4i, PathNodePtr, matrix_hash<Eigen::Vector4i>>
@@ -107,7 +111,7 @@ class KinodynamicAstar {
   /* ---------- main data structure ---------- */
   vector<PathNodePtr> path_node_pool_;
   int use_node_num_, iter_num_;
-  NodeHashTable expanded_nodes_;
+  NodeHashTable expanded_nodes_;  // closed_set
   std::priority_queue<PathNodePtr, std::vector<PathNodePtr>, NodeComparator>
       open_set_;
   std::vector<PathNodePtr> path_nodes_;

@@ -181,6 +181,7 @@ void LinearObjModel::update(double dt) {
   }
 }
 
+// 判断两个线性物体模型是否发生碰撞
 bool LinearObjModel::collide(LinearObjModel& obj1, LinearObjModel& obj2) {
   Eigen::Vector3d pos1, pos2, vel1, vel2, scale1, scale2;
   pos1 = obj1.getPosition();

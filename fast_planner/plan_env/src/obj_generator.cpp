@@ -21,7 +21,12 @@
 * along with Fast-Planner. If not, see <http://www.gnu.org/licenses/>.
 */
 
-
+/*
+How to used?
+roscore
+rosrun plan_env obj_generator
+rviz // And set to the world frame
+*/
 
 #include "visualization_msgs/Marker.h"
 #include <ros/ros.h>
@@ -45,9 +50,9 @@ ros::Publisher obj_pub;            // visualize marker
 vector<ros::Publisher> pose_pubs;  // obj pose (from optitrack)
 vector<LinearObjModel> obj_models;
 
-random_device rd;
-default_random_engine eng(rd());
-uniform_real_distribution<double> rand_pos;
+random_device rd;                            // 初始化随机的种子
+default_random_engine eng(rd());             // 生成伪随机数序列，通过随机种子和生成引擎，以生成更随机的伪随机数序列。
+uniform_real_distribution<double> rand_pos;  // 定义一个连续均匀分布的随机数分布器
 uniform_real_distribution<double> rand_h;
 uniform_real_distribution<double> rand_vel;
 uniform_real_distribution<double> rand_acc_r;
@@ -103,6 +108,7 @@ int main(int argc, char** argv) {
   rand_yaw_dot = uniform_real_distribution<double>(-_yaw_dot, _yaw_dot);
 
   /* ---------- give initial value of each obj ---------- */
+  // 随机初始化各个obj的各个成员变量
   for (int i = 0; i < obj_num; ++i) {
     LinearObjModel model;
     Eigen::Vector3d pos(rand_pos(eng), rand_pos(eng), rand_h(eng));
@@ -182,6 +188,7 @@ void updateCallback(const ros::TimerEvent& e) {
     }
 }
 
+// 可视化
 void visualizeObj(int id) {
   Eigen::Vector3d pos, color, scale;
   pos = obj_models[id].getPosition();

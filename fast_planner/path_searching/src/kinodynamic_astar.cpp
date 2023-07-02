@@ -70,7 +70,7 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
     time_origin_ = time_start;
     cur_node->time = time_start;
     cur_node->time_idx = timeToIndex(time_start);  // 带有时间信息的insert
-    expanded_nodes_.insert(cur_node->index, cur_node->time_idx, cur_node);  // expand_nodes_: hash table
+    expanded_nodes_.insert(cur_node->index, cur_node->time_idx, cur_node);  // expanded_nodes_: hash table 作为close_set
     // cout << "time start: " << time_start << endl;
   }
   else
@@ -187,7 +187,7 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
         // Check if in close set
         Eigen::Vector3i pro_id = posToIndex(pro_pos);  // 查看是否已经遍历过
         int pro_t_id = timeToIndex(pro_t);
-        PathNodePtr pro_node = dynamic ? expanded_nodes_.find(pro_id, pro_t_id) : expanded_nodes_.find(pro_id);
+        PathNodePtr pro_node = dynamic ? expanded_nodes_.find(pro_id, pro_t_id) : expanded_nodes_.find(pro_id); // 存在dynamic则使用带有时间的
         if (pro_node != NULL && pro_node->node_state == IN_CLOSE_SET)
         {
           if (init_search)
@@ -351,7 +351,7 @@ void KinodynamicAstar::setParam(ros::NodeHandle& nh)
   nh.param("search/resolution_astar", resolution_, -1.0);
   nh.param("search/time_resolution", time_resolution_, -1.0);
   nh.param("search/lambda_heu", lambda_heu_, -1.0);
-  nh.param("search/allocate_num", allocate_num_, -1);
+  nh.param("search/allocate_num", allocate_num_, -1); // 100000
   nh.param("search/check_num", check_num_, -1);
   nh.param("search/optimistic", optimistic_, true);
   tie_breaker_ = 1.0 + 1.0 / 10000;

@@ -91,24 +91,24 @@ void FastPlannerManager::initPlanModules(ros::NodeHandle& nh) {
 void FastPlannerManager::setGlobalWaypoints(vector<Eigen::Vector3d>& waypoints) {
   plan_data_.global_waypoints_ = waypoints;
 }
-
+// 轨迹检查是否存在碰撞
 bool FastPlannerManager::checkTrajCollision(double& distance) {
 
-  double t_now = (ros::Time::now() - local_data_.start_time_).toSec();
+  double t_now = (ros::Time::now() - local_data_.start_time_).toSec();  // 当前时间减开始planning时间
 
   double tm, tmp;
   local_data_.position_traj_.getTimeSpan(tm, tmp);
-  Eigen::Vector3d cur_pt = local_data_.position_traj_.evaluateDeBoor(tm + t_now);
+  Eigen::Vector3d cur_pt = local_data_.position_traj_.evaluateDeBoor(tm + t_now); // 计算该时间点的位置
 
   double          radius = 0.0;
   Eigen::Vector3d fut_pt;
-  double          fut_t = 0.02;
+  double          fut_t = 0.02; // 未来的时间间隔
 
   while (radius < 6.0 && t_now + fut_t < local_data_.duration_) {
     fut_pt = local_data_.position_traj_.evaluateDeBoor(tm + t_now + fut_t);
 
-    double dist = edt_environment_->evaluateCoarseEDT(fut_pt, -1.0);
-    if (dist < 0.1) {
+    double dist = edt_environment_->evaluateCoarseEDT(fut_pt, -1.0);   // 计算障碍物与未来位置的距离
+    if (dist < 0.1) { // 发生碰撞
       distance = radius;
       return false;
     }
@@ -140,7 +140,7 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
 
   ros::Time t1, t2;
 
-  local_data_.start_time_ = ros::Time::now();
+  local_data_.start_time_ = ros::Time::now(); // 设置开始时间
   double t_search = 0.0, t_opt = 0.0, t_adjust = 0.0;
 
   Eigen::Vector3d init_pos = start_pt;

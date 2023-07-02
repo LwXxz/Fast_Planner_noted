@@ -67,6 +67,8 @@ public:
 };
 typedef Node* NodePtr;
 
+// NodeComparator0为一个仿函数，即类中实现了operator(),这个类有了函数的行为，从大到小
+// 放在open_set初始化时，即初始化为小根堆
 class NodeComparator0 {
 public:
   bool operator()(NodePtr node1, NodePtr node2) {
@@ -124,7 +126,7 @@ private:
   /* ---------- main data structure ---------- */
   vector<NodePtr> path_node_pool_;
   int use_node_num_, iter_num_;
-  NodeHashTable0 expanded_nodes_;
+  NodeHashTable0 expanded_nodes_; // close_set
   std::priority_queue<NodePtr, std::vector<NodePtr>, NodeComparator0> open_set_;
   std::vector<NodePtr> path_nodes_;
 
@@ -136,7 +138,7 @@ private:
   /* search */
   double lambda_heu_;
   double margin_;
-  int allocate_num_;
+  int allocate_num_; // 100000
   double tie_breaker_;
   /* map */
   double resolution_, inv_resolution_, time_resolution_, inv_time_resolution_;

@@ -35,7 +35,7 @@ PolynomialTraj minSnapTraj(const Eigen::MatrixXd& Pos, const Eigen::Vector3d& st
 
   int num_f, num_p;  // number of fixed and free variables
   int num_d;         // number of all segments' derivatives
-
+  // 阶乘匿名函数
   const static auto Factorial = [](int x) {
     int fac = 1;
     for (int i = x; i > 0; i--)
@@ -195,11 +195,12 @@ PolynomialTraj minSnapTraj(const Eigen::MatrixXd& Pos, const Eigen::Vector3d& st
   return poly_traj;
 }
 
+// 四阶
 PolynomialTraj fastLine4deg(Eigen::Vector3d start, Eigen::Vector3d end, double max_vel, double max_acc,
                             double max_jerk) {
   Eigen::Vector3d disp = end - start;
-  double len = disp.norm();
-  Eigen::Vector3d dir = disp.normalized();
+  double len = disp.norm(); // 欧式距离
+  Eigen::Vector3d dir = disp.normalized();  // 归一化
 
   // get scale vector
   int max_id = -1;
@@ -409,6 +410,7 @@ PolynomialTraj fastLine4deg(Eigen::Vector3d start, Eigen::Vector3d end, double m
   return poly_traj;
 }
 
+// 3阶
 PolynomialTraj fastLine3deg(Eigen::Vector3d start, Eigen::Vector3d end, double max_vel, double max_acc) {
   Eigen::Vector3d disp = end - start;
   double len = disp.norm();

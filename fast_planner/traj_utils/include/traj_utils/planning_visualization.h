@@ -67,7 +67,7 @@ private:
   ros::Publisher visib_pub_;     // 3, visibility constraints
   ros::Publisher frontier_pub_;  // 4, frontier searching
   ros::Publisher yaw_pub_;       // 5, yaw trajectory
-  vector<ros::Publisher> pubs_;  //
+  vector<ros::Publisher> pubs_;  // 按照顺序吧发布者放到容器中，需要发布某个类型时直接索引发布即可(pubs_[pub_id].publish(mk);)
 
   int last_topo_path1_num_;
   int last_topo_path2_num_;

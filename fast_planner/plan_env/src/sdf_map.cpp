@@ -76,6 +76,7 @@ void SDFMap::initMap(ros::NodeHandle& nh) {
   node_.param("sdf_map/local_map_margin", mp_.local_map_margin_, 1);
   node_.param("sdf_map/ground_height", mp_.ground_height_, 1.0);
 
+  // 设置地图常数变量: mp, 设置地图数据：md
   mp_.local_bound_inflate_ = max(mp_.resolution_, mp_.local_bound_inflate_);
   mp_.resolution_inv_ = 1 / mp_.resolution_;
   mp_.map_origin_ = Eigen::Vector3d(-x_size / 2.0, -y_size / 2.0, mp_.ground_height_);
@@ -738,7 +739,7 @@ void SDFMap::clearAndInflateLocalMap() {
       for (int z = md_.local_bound_min_(2); z <= md_.local_bound_max_(2); ++z) {
 
         if (md_.occupancy_buffer_[toAddress(x, y, z)] > mp_.min_occupancy_log_) {
-          inflatePoint(Eigen::Vector3i(x, y, z), inf_step, inf_pts);
+          inflatePoint(Eigen::Vector3i(x, y, z), inf_step, inf_pts);  // 对地图上的点进行膨胀
 
           for (int k = 0; k < (int)inf_pts.size(); ++k) {
             inf_pt = inf_pts[k];
@@ -1023,7 +1024,7 @@ void SDFMap::publishMap() {
   cloud.header.frame_id = mp_.frame_id_;
   sensor_msgs::PointCloud2 cloud_msg;
 
-  pcl::toROSMsg(cloud, cloud_msg);
+  pcl::toROSMsg(cloud, cloud_msg);  // pcl::PointCloud<pcl::PointXYZ>转成sensor_msgs::PointCloud2
   map_pub_.publish(cloud_msg);
 }
 

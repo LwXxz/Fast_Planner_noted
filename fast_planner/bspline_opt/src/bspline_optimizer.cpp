@@ -92,7 +92,7 @@ void BsplineOptimizer::setCostFunction(const int& cost_code) {
 
   // print optimized cost function
   string cost_str;
-  if (cost_function_ & SMOOTHNESS) cost_str += "smooth |";
+  if (cost_function_ & SMOOTHNESS) cost_str += "smooth |";  // &：按位取与
   if (cost_function_ & DISTANCE) cost_str += " dist  |";
   if (cost_function_ & FEASIBILITY) cost_str += " feasi |";
   if (cost_function_ & ENDPOINT) cost_str += " endpt |";
@@ -110,13 +110,14 @@ void BsplineOptimizer::setWaypoints(const vector<Eigen::Vector3d>& waypts,
   waypt_idx_ = waypt_idx;
 }
 
+// 优化函数
 Eigen::MatrixXd BsplineOptimizer::BsplineOptimizeTraj(const Eigen::MatrixXd& points, const double& ts,
                                                       const int& cost_function, int max_num_id,
                                                       int max_time_id) {
   setControlPoints(points);       // 设置控制点
   setBsplineInterval(ts);         // 设置时间间隔
   setCostFunction(cost_function); // 设置代价函数
-  setTerminateCond(max_num_id, max_time_id);
+  setTerminateCond(max_num_id, max_time_id);  // 设置终止条件
 
   optimize();
   return this->control_points_;
@@ -125,7 +126,7 @@ Eigen::MatrixXd BsplineOptimizer::BsplineOptimizeTraj(const Eigen::MatrixXd& poi
 void BsplineOptimizer::optimize() {
   /* initialize solver */
   iter_num_        = 0;
-  min_cost_        = std::numeric_limits<double>::max();
+  min_cost_        = std::numeric_limits<double>::max(); // 返回编译器允许的double最大值
   const int pt_num = control_points_.rows();
   g_q_.resize(pt_num);
   g_smoothness_.resize(pt_num);
@@ -390,7 +391,7 @@ void BsplineOptimizer::combineCost(const std::vector<double>& x, std::vector<dou
     }
   }
 
-  f_combine = 0.0;
+  f_combine = 0.0;  // 总损失
   grad.resize(variable_num_);
   fill(grad.begin(), grad.end(), 0.0);
 
@@ -451,9 +452,9 @@ void BsplineOptimizer::combineCost(const std::vector<double>& x, std::vector<dou
 
 double BsplineOptimizer::costFunction(const std::vector<double>& x, std::vector<double>& grad,
                                       void* func_data) {
-  BsplineOptimizer* opt = reinterpret_cast<BsplineOptimizer*>(func_data);
+  BsplineOptimizer* opt = reinterpret_cast<BsplineOptimizer*>(func_data); // reinterpret_cast 运算符将空指针值转换为目标类型的空指针值。
   double            cost;
-  opt->combineCost(x, grad, cost);
+  opt->combineCost(x, grad, cost);  // 返回总的cost
   opt->iter_num_++;
 
   /* save the min cost result */
@@ -494,7 +495,7 @@ Eigen::MatrixXd BsplineOptimizer::getControlPoints() { return this->control_poin
 bool BsplineOptimizer::isQuadratic() {
   if (cost_function_ == GUIDE_PHASE) {
     return true;
-  } else if (cost_function_ == (SMOOTHNESS | WAYPOINTS)) {
+  } else if (cost_function_ == (SMOOTHNESS | WAYPOINTS)) { // |： 位运算的or
     return true;
   }
   return false;

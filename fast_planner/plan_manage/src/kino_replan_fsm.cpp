@@ -50,11 +50,11 @@ void KinoReplanFSM::init(ros::NodeHandle& nh) {
 
   /* initialize main modules */
   planner_manager_.reset(new FastPlannerManager);
-  planner_manager_->initPlanModules(nh);
+  planner_manager_->initPlanModules(nh);  // 初始化Planner
   visualization_.reset(new PlanningVisualization(nh));
 
   /* callback */
-  // 创建一个定时器，以某一Duration 秒 的时间间隔执行某一回调函数
+  // 创建一个定时器，以某一Duration 秒 的时间间隔执行某一回调函数，实际上callback函数可能只是需要这样的重复执行频率，在订阅或服务中的回调函数队列机制中使用
   exec_timer_   = nh.createTimer(ros::Duration(0.01), &KinoReplanFSM::execFSMCallback, this);
   safety_timer_ = nh.createTimer(ros::Duration(0.05), &KinoReplanFSM::checkCollisionCallback, this);
   // 典型话题通信
@@ -132,7 +132,7 @@ void KinoReplanFSM::odometryCallback(const nav_msgs::OdometryConstPtr& msg) {
   have_odom_ = true;
 }
 
-// 执行方式
+// 执行方式，e参数实际上并不会使用
 void KinoReplanFSM::execFSMCallback(const ros::TimerEvent& e) {
   static int fsm_num = 0;
   fsm_num++;
@@ -239,12 +239,12 @@ void KinoReplanFSM::execFSMCallback(const ros::TimerEvent& e) {
     }
   }
 }
-
+// 碰撞检测
 void KinoReplanFSM::checkCollisionCallback(const ros::TimerEvent& e) {
   LocalTrajData* info = &planner_manager_->local_data_;
 
   if (have_target_) {
-    auto edt_env = planner_manager_->edt_environment_;
+    auto edt_env = planner_manager_->edt_environment_;  // 得到环境
 
     double dist = planner_manager_->pp_.dynamic_ ?
         edt_env->evaluateCoarseEDT(end_pt_, /* time to program start + */ info->duration_) :
@@ -308,7 +308,7 @@ void KinoReplanFSM::checkCollisionCallback(const ros::TimerEvent& e) {
   /* ---------- check trajectory ---------- */
   if (exec_state_ == FSM_EXEC_STATE::EXEC_TRAJ) {
     double dist;
-    bool   safe = planner_manager_->checkTrajCollision(dist);
+    bool   safe = planner_manager_->checkTrajCollision(dist);   // 轨迹检查是否存在碰撞
 
     if (!safe) {
       // cout << "current traj in collision." << endl;

@@ -45,7 +45,7 @@ private:
 
   int             p_, n_, m_;  // p degree, n+1 control points, m = n+p+1
   Eigen::VectorXd u_;          // knots vector
-  double          interval_;   // knot span \delta t
+  double          interval_;   // knot span \delta t 间隔
 
   Eigen::MatrixXd getDerivativeControlPoints();
 

@@ -113,7 +113,7 @@ Eigen::MatrixXd NonUniformBspline::getDerivativeControlPoints() {
   Eigen::MatrixXd ctp = Eigen::MatrixXd::Zero(control_points_.rows() - 1, control_points_.cols());
   for (int i = 0; i < ctp.rows(); ++i) {
     ctp.row(i) =
-        p_ * (control_points_.row(i + 1) - control_points_.row(i)) / (u_(i + p_ + 1) - u_(i + 1));
+        p_ * (control_points_.row(i + 1) - control_points_.row(i)) / (u_(i + p_ + 1) - u_(i + 1));  // 控制点的一阶导数
   }
   return ctp;
 }
@@ -203,10 +203,8 @@ double NonUniformBspline::checkRatio() {
   // find max acc
   double max_acc = -1.0;
   for (int i = 0; i < P.rows() - 2; ++i) {
-    Eigen::VectorXd acc = p_ * (p_ - 1) *
-        ((P.row(i + 2) - P.row(i + 1)) / (u_(i + p_ + 2) - u_(i + 2)) -
-         (P.row(i + 1) - P.row(i)) / (u_(i + p_ + 1) - u_(i + 1))) /
-        (u_(i + p_ + 1) - u_(i + 2));
+    Eigen::VectorXd acc = p_ * (p_ - 1) * ((P.row(i + 2) - P.row(i + 1)) / (u_(i + p_ + 2) - u_(i + 2)) 
+                          - (P.row(i + 1) - P.row(i)) / (u_(i + p_ + 1) - u_(i + 1))) / (u_(i + p_ + 1) - u_(i + 2)); // 控制点二阶导数
     for (int j = 0; j < dimension; ++j) {
       max_acc = max(max_acc, fabs(acc(j)));
     }
@@ -387,7 +385,7 @@ void NonUniformBspline::parameterizeToBspline(const double& ts, const vector<Eig
     bz(K + i) = start_end_derivative[i](2);
   }
 
-  // solve Ax = b
+  // solve Ax = b, 求解线性方程
   Eigen::VectorXd px = A.colPivHouseholderQr().solve(bx);
   Eigen::VectorXd py = A.colPivHouseholderQr().solve(by);
   Eigen::VectorXd pz = A.colPivHouseholderQr().solve(bz);

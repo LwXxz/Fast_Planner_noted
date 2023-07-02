@@ -44,9 +44,10 @@ void EDTEnvironment::setObjScale(ObjScale scale) {
   this->obj_scale_ = scale;
 }
 
+// 计算给定位置与指定盒子之间的距离
 double EDTEnvironment::distToBox(int idx, const Eigen::Vector3d& pos, const double& time) {
   // Eigen::Vector3d pos_box = obj_prediction_->at(idx).evaluate(time);
-  Eigen::Vector3d pos_box = obj_prediction_->at(idx).evaluateConstVel(time);
+  Eigen::Vector3d pos_box = obj_prediction_->at(idx).evaluateConstVel(time);  
 
   Eigen::Vector3d box_max = pos_box + 0.5 * obj_scale_->at(idx);
   Eigen::Vector3d box_min = pos_box - 0.5 * obj_scale_->at(idx);
@@ -58,7 +59,7 @@ double EDTEnvironment::distToBox(int idx, const Eigen::Vector3d& pos, const doub
                                                                        fabs(pos(i) - box_max(i)));
   }
 
-  return dist.norm();
+  return dist.norm(); // 返回欧式距离
 }
 
 double EDTEnvironment::minDistToAllBox(const Eigen::Vector3d& pos, const double& time) {
