@@ -35,6 +35,7 @@ NonUniformBspline::NonUniformBspline(const Eigen::MatrixXd& points, const int& o
 
 NonUniformBspline::~NonUniformBspline() {}
 
+//  这一函数在获得控制点，轨迹次数，以及时间间隔的情况下，设置时间区间（Knot vector）
 void NonUniformBspline::setUniformBspline(const Eigen::MatrixXd& points, const int& order,
                                           const double& interval) {
   control_points_ = points;
@@ -44,7 +45,7 @@ void NonUniformBspline::setUniformBspline(const Eigen::MatrixXd& points, const i
   n_ = points.rows() - 1;
   m_ = n_ + p_ + 1;
 
-  u_ = Eigen::VectorXd::Zero(m_ + 1);
+  u_ = Eigen::VectorXd::Zero(m_ + 1); // 时间
   for (int i = 0; i <= m_; ++i) {
 
     if (i <= p_) {
@@ -74,6 +75,7 @@ pair<Eigen::VectorXd, Eigen::VectorXd> NonUniformBspline::getHeadTailPts() {
   return make_pair(head, tail);
 }
 
+// 使用DeBoor算法计算B-spline坐标值
 Eigen::VectorXd NonUniformBspline::evaluateDeBoor(const double& u) {
 
   double ub = min(max(u_(p_), u), u_(m_ - p_));
@@ -107,6 +109,9 @@ Eigen::VectorXd NonUniformBspline::evaluateDeBoorT(const double& t) {
   return evaluateDeBoor(t + u_(p_));
 }
 
+// 当我们得到一条时间节点等同的均匀B样条曲线后，我们希望能够对这条曲线上的速度及加速度进行动力学检查，
+// 以备之后进行时间节点调整。于是我们需要计算出非均匀形式下的速度控制点及加速度控制点。
+//（直接用均匀B样条的控制点算是因为均匀B样条可以看做特殊形式的非均匀B样条）
 Eigen::MatrixXd NonUniformBspline::getDerivativeControlPoints() {
   // The derivative of a b-spline is also a b-spline, its order become p_-1
   // control point Qi = p_*(Pi+1-Pi)/(ui+p_+1-ui+1)
@@ -117,7 +122,6 @@ Eigen::MatrixXd NonUniformBspline::getDerivativeControlPoints() {
   }
   return ctp;
 }
-
 NonUniformBspline NonUniformBspline::getDerivative() {
   Eigen::MatrixXd   ctp = getDerivativeControlPoints();
   NonUniformBspline derivative(ctp, p_ - 1, interval_);
@@ -138,6 +142,8 @@ void NonUniformBspline::setPhysicalLimits(const double& vel, const double& acc) 
   limit_ratio_ = 1.1;
 }
 
+// 函数 checkFeasibility(), checkRatio(), reallocateTime()的大部分内容都是一致的，
+// 计算每个控制点的速度和加速度是否超限，最大速度是多少，并获得调整比例
 bool NonUniformBspline::checkFeasibility(bool show) {
   bool fea = true;
   // SETY << "[Bspline]: total points size: " << control_points_.rows() << endl;
@@ -330,6 +336,7 @@ void NonUniformBspline::lengthenTime(const double& ratio) {
 
 void NonUniformBspline::recomputeInit() {}
 
+/* 控制点获得-前端路径拟合, 对所找到的路径使用均匀b-spline进行拟合，得到响应的控制点*/
 void NonUniformBspline::parameterizeToBspline(const double& ts, const vector<Eigen::Vector3d>& point_set,
                                               const vector<Eigen::Vector3d>& start_end_derivative,
                                               Eigen::MatrixXd&               ctrl_pts) {

@@ -64,14 +64,14 @@ void FastPlannerManager::initPlanModules(ros::NodeHandle& nh) {
     geo_path_finder_->setEnvironment(edt_environment_);
     geo_path_finder_->init();
   }
-
+  // 初始化kino_path_finder_
   if (use_kinodynamic_path) {
     kino_path_finder_.reset(new KinodynamicAstar);
     kino_path_finder_->setParam(nh);
     kino_path_finder_->setEnvironment(edt_environment_);
     kino_path_finder_->init();
   }
-
+  // 初始化bspline_optimizers_
   if (use_optimization) {
     bspline_optimizers_.resize(10);
     for (int i = 0; i < 10; ++i) {
@@ -128,7 +128,7 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
                                            Eigen::Vector3d start_acc, Eigen::Vector3d end_pt,
                                            Eigen::Vector3d end_vel) {
 
-  std::cout << "[kino replan]: -----------------------" << std::endl;
+  std::cout << "[kino replan]: -----------------------" << std::endl; // （5）
   cout << "start: " << start_pt.transpose() << ", " << start_vel.transpose() << ", "
        << start_acc.transpose() << "\ngoal:" << end_pt.transpose() << ", " << end_vel.transpose()
        << endl;
@@ -156,14 +156,14 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
   int status = kino_path_finder_->search(start_pt, start_vel, start_acc, end_pt, end_vel, true);   // 开始搜索
 
   // 判断是否找到路径，没找到就再找一次
-  if (status == KinodynamicAstar::NO_PATH) {
-    cout << "[kino replan]: kinodynamic search fail!" << endl;
+  if (status == KinodynamicAstar::NO_PATH) { // （7）
+    cout << "[kino replan]: kinodynamic search fail!" << endl;  
 
     // retry searching with discontinuous initial state
     kino_path_finder_->reset();
     status = kino_path_finder_->search(start_pt, start_vel, start_acc, end_pt, end_vel, false);
 
-    if (status == KinodynamicAstar::NO_PATH) {
+    if (status == KinodynamicAstar::NO_PATH) {          // （8）
       cout << "[kino replan]: Can't find path." << endl;
       return false;
     } else {
@@ -196,16 +196,16 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
 
   if (status != KinodynamicAstar::REACH_END) {
     cost_function |= BsplineOptimizer::ENDPOINT;
-  }
+  } // 当前轨迹只是达到感知距离以外并未达到目标点时，目标函数需要加上ENDPOINT优化项
 
-  ctrl_pts = bspline_optimizers_[0]->BsplineOptimizeTraj(ctrl_pts, ts, cost_function, 1, 1);
+  ctrl_pts = bspline_optimizers_[0]->BsplineOptimizeTraj(ctrl_pts, ts, cost_function, 1, 1); // 开始优化 （9）（10）
 
-  t_opt = (ros::Time::now() - t1).toSec();
+  t_opt = (ros::Time::now() - t1).toSec();  // 计算优化所花费的时间
 
   // iterative time adjustment
 
   t1                    = ros::Time::now();
-  NonUniformBspline pos = NonUniformBspline(ctrl_pts, 3, ts);
+  NonUniformBspline pos = NonUniformBspline(ctrl_pts, 3, ts); // 利用非均匀B样条类进行迭代时间调整
 
   double to = pos.getTimeSum();
   pos.setPhysicalLimits(pp_.max_vel_, pp_.max_acc_);
@@ -231,7 +231,7 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
 
   // save planned results
 
-  local_data_.position_traj_ = pos;
+  local_data_.position_traj_ = pos; // 最后的轨迹
 
   double t_total = t_search + t_opt + t_adjust;
   cout << "[kino replan]: time: " << t_total << ", search: " << t_search << ", optimize: " << t_opt
@@ -241,7 +241,7 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
   pp_.time_optimize_ = t_opt;
   pp_.time_adjust_   = t_adjust;
 
-  updateTrajInfo();
+  updateTrajInfo(); // 对local_data进行更新
 
   return true;
 }
@@ -429,9 +429,9 @@ void FastPlannerManager::refineTraj(NonUniformBspline& best_traj, double& time_i
 
 void FastPlannerManager::updateTrajInfo() {
   local_data_.velocity_traj_     = local_data_.position_traj_.getDerivative();
-  local_data_.acceleration_traj_ = local_data_.velocity_traj_.getDerivative();
-  local_data_.start_pos_         = local_data_.position_traj_.evaluateDeBoorT(0.0);
-  local_data_.duration_          = local_data_.position_traj_.getTimeSum();
+  local_data_.acceleration_traj_ = local_data_.velocity_traj_.getDerivative();      // 
+  local_data_.start_pos_         = local_data_.position_traj_.evaluateDeBoorT(0.0); // 轨迹起始点的值
+  local_data_.duration_          = local_data_.position_traj_.getTimeSum();         // 整段轨迹花费的时间
   local_data_.traj_id_ += 1;
 }
 

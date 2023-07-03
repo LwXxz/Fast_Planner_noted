@@ -73,21 +73,21 @@ void KinoReplanFSM::changeFSMExecState(FSM_EXEC_STATE new_state, string pos_call
   string state_str[5] = { "INIT", "WAIT_TARGET", "GEN_NEW_TRAJ", "REPLAN_TRAJ", "EXEC_TRAJ" };
   int    pre_s        = int(exec_state_);   // 实际上提供了隐式转换，Enum->int
   exec_state_         = new_state;          // 改变当前状态
-  cout << "[" + pos_call + "]: from " + state_str[pre_s] + " to " + state_str[int(new_state)] << endl;
+  cout << "[" + pos_call + "]: from " + state_str[pre_s] + " to " + state_str[int(new_state)] << endl; // （1）----（4）
 }
 
-// 输出状态
+// 输出状态 
 void KinoReplanFSM::printFSMExecState() {
   string state_str[5] = { "INIT", "WAIT_TARGET", "GEN_NEW_TRAJ", "REPLAN_TRAJ", "EXEC_TRAJ" };
 
-  cout << "[FSM]: state: " + state_str[int(exec_state_)] << endl;
+  cout << "[FSM]: state: " + state_str[int(exec_state_)] << endl; // （2）
 }
 
 // 回调函数里的参数 = topic
 void KinoReplanFSM::waypointCallback(const nav_msgs::PathConstPtr& msg) {
   if (msg->poses[0].pose.position.z < -0.1) return;
 
-  cout << "Triggered!" << endl;
+  cout << "Triggered!" << endl; // （3）
   trigger_ = true;
 
   // 基于枚举数据类型的比对

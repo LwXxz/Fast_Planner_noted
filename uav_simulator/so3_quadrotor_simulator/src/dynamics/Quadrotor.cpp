@@ -75,7 +75,8 @@ Quadrotor::step(double dt)
     state_.R(i, 2) = internal_state_[12 + i];
     state_.omega(i) = internal_state_[15 + i];
   }
-  state_.motor_rpm(0) = internal_state_[18];
+  // 电机的每分钟转速
+  state_.motor_rpm(0) = internal_state_[18]; 
   state_.motor_rpm(1) = internal_state_[19];
   state_.motor_rpm(2) = internal_state_[20];
   state_.motor_rpm(3) = internal_state_[21];

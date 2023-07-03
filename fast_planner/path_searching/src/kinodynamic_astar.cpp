@@ -47,9 +47,9 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
 
   PathNodePtr cur_node = path_node_pool_[0];  // 从节点池中选取第一个，在这之前已经初始化好了
   cur_node->parent = NULL;
-  cur_node->state.head(3) = start_pt;   // state向量前三个为位置
-  cur_node->state.tail(3) = start_v;    //          后三个为速度
-  cur_node->index = posToIndex(start_pt);
+  cur_node->state.head(3) = start_pt;     // state向量前三个为位置
+  cur_node->state.tail(3) = start_v;      //          后三个为速度
+  cur_node->index = posToIndex(start_pt); // 将点转化为栅格地图的index
   cur_node->g_score = 0.0;
 
   Eigen::VectorXd end_state(6);
@@ -100,7 +100,7 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
       {
         // Check whether shot traj exist
         estimateHeuristic(cur_node->state, end_state, time_to_goal);
-        computeShotTraj(cur_node->state, end_state, time_to_goal);
+        computeShotTraj(cur_node->state, end_state, time_to_goal);  // 计算一条直达的直线
         if (init_search)
           ROS_ERROR("Shot in first search loop!");
       }
@@ -334,7 +334,7 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
     // init_search = false;
   }
   // end while
-  cout << "open set empty, no path!" << endl;
+  cout << "open set empty, no path!" << endl;       // （6）
   cout << "use node num: " << use_node_num_ << endl;
   cout << "iter num: " << iter_num_ << endl;
   return NO_PATH;
@@ -383,7 +383,7 @@ double KinodynamicAstar::estimateHeuristic(Eigen::VectorXd x1, Eigen::VectorXd x
   const Vector3d dp = x2.head(3) - x1.head(3);  // 坐标差值
   const Vector3d v0 = x1.segment(3, 3);         // segment(start, start + num)，截取向量数据
   const Vector3d v1 = x2.segment(3, 3);
-  // 令t = 1/T作为变量, 因此系数需要倒过来
+  // 求一阶导后，令t = 1/T作为变量, 因此系数需要倒过来
   double c1 = -36 * dp.dot(dp);                 
   double c2 = 24 * (v0 + v1).dot(dp);
   double c3 = -4 * (v0.dot(v0) + v0.dot(v1) + v1.dot(v1));

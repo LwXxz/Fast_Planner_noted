@@ -99,7 +99,7 @@ void BsplineOptimizer::setCostFunction(const int& cost_code) {
   if (cost_function_ & GUIDE) cost_str += " guide |";
   if (cost_function_ & WAYPOINTS) cost_str += " waypt |";
 
-  ROS_INFO_STREAM("cost func: " << cost_str);
+  ROS_INFO_STREAM("cost func: " << cost_str); // （9）
 }
 
 void BsplineOptimizer::setGuidePath(const vector<Eigen::Vector3d>& guide_pt) { guide_pts_ = guide_pt; }
@@ -110,7 +110,8 @@ void BsplineOptimizer::setWaypoints(const vector<Eigen::Vector3d>& waypts,
   waypt_idx_ = waypt_idx;
 }
 
-// 优化函数
+// 优化函数，将优化的控制点，均匀B样条的时间间隔，cost Function包含的优化项，以及终止条件（最大优化次数及最长优化时间）都设置好以后，
+// 即利用BsplineOptimizer的optimize()函数进行优化
 Eigen::MatrixXd BsplineOptimizer::BsplineOptimizeTraj(const Eigen::MatrixXd& points, const double& ts,
                                                       const int& cost_function, int max_num_id,
                                                       int max_time_id) {
@@ -195,7 +196,7 @@ void BsplineOptimizer::optimize() {
     }
   }
 
-  if (!(cost_function_ & GUIDE)) ROS_INFO_STREAM("iter num: " << iter_num_);
+  if (!(cost_function_ & GUIDE)) ROS_INFO_STREAM("iter num: " << iter_num_); //（10）
 }
 
 void BsplineOptimizer::calcSmoothnessCost(const vector<Eigen::Vector3d>& q, double& cost,

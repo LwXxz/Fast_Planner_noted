@@ -16,7 +16,7 @@ public:
     Eigen::Vector3d v;
     Eigen::Matrix3d R;
     Eigen::Vector3d omega;
-    Eigen::Array4d  motor_rpm;
+    Eigen::Array4d  motor_rpm;  // 电机转速
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
   };
 
